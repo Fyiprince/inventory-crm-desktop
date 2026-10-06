@@ -1,0 +1,77 @@
+{
+  "name": "inventory-crm-desktop",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Recovered offline-first Inventory CRM — Electron + React + Express + Prisma + SQLite.",
+  "main": "electron/main.js",
+  "scripts": {
+    "install:all": "npm install && npm --prefix backend-node install && npm --prefix frontend install",
+    "frontend:dev": "npm --prefix frontend run dev",
+    "frontend:build": "npm --prefix frontend run build",
+    "backend:dev": "npm --prefix backend-node start",
+    "electron": "electron .",
+    "start": "npm run frontend:build && electron .",
+    "dist:win": "npm run frontend:build && electron-builder --win nsis",
+    "dist:dir": "npm run frontend:build && electron-builder --dir"
+  },
+  "devDependencies": {
+    "electron": "^38.2.2",
+    "electron-builder": "^26.0.12"
+  },
+  "build": {
+    "appId": "com.inventorycrm.desktop",
+    "productName": "Inventory CRM",
+    "directories": {
+      "output": "dist"
+    },
+    "files": [
+      "electron/**/*",
+      "package.json",
+      "!**/*.log",
+      "!**/*.md",
+      "!**/*.map"
+    ],
+    "extraResources": [
+      {
+        "from": "frontend/build",
+        "to": "frontend/build"
+      },
+      {
+        "from": "backend-package",
+        "to": "backend-node",
+        "filter": [
+          "**/*",
+          "!node_modules/**",
+          "!**/*.log",
+          "!**/*.md",
+          "!**/*.map"
+        ]
+      },
+      {
+        "from": "backend-package/node_modules",
+        "to": "backend-node/node_modules"
+      }
+    ],
+    "asarUnpack": [
+      "backend-node/**/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64"
+          ]
+        }
+      ]
+    },
+    "nsis": {
+      "oneClick": false,
+      "perMachine": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "shortcutName": "Inventory CRM"
+    }
+  }
+}

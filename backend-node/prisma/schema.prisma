@@ -1,0 +1,176 @@
+// Prisma schema for Inventory CRM (SQLite - offline-first)
+
+generator client {
+  provider      = "prisma-client-js"
+  binaryTargets = ["native", "windows"]
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Category {
+  id          String    @id @default(uuid())
+  name        String    @unique
+  description String?
+  skuPrefix   String    @default("")
+  products    Product[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Supplier {
+  id           String        @id @default(uuid())
+  name         String
+  contact      String?
+  phone        String?
+  email        String?
+  address      String?
+  gstNumber    String?
+  products     Product[]
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Project {
+  id           String        @id @default(uuid())
+  name         String        @unique
+  description  String?
+  status       String        @default("active")
+  transactions Transaction[]
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+}
+
+model Product {
+  id           String    @id @default(uuid())
+  sku          String    @unique
+  name         String
+  description  String?
+  unit         String    @default("pcs")
+  price        Float     @default(0)
+  minStock     Int       @default(0)
+  currentStock Int       @default(0)
+
+  // Storage location
+  location     String?
+  rackNumber   String?
+
+  categoryId   String?
+  supplierId   String?
+
+  category     Category?     @relation(fields: [categoryId], references: [id], onDelete: SetNull)
+  supplier     Supplier?     @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  transactions Transaction[]
+
+  createdAt    DateTime      @default(now())
+  updatedAt    DateTime      @updatedAt
+
+  @@index([name])
+  @@index([sku])
+}
+
+model Transaction {
+  id           String    @id @default(uuid())
+  type         String
+
+  // Product
+  productId    String
+  product      Product   @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Quantity / Cost
+  quantity     Int
+  unitCost     Float?
+
+  // ==========================================
+  // GST DETAILS
+  // ==========================================
+
+  // General GST information
+  gstPercentage Float?
+  gstType       String?
+
+  // CGST
+  cgstPercentage Float?
+  cgstAmount     Float?
+
+  // SGST
+  sgstPercentage Float?
+  sgstAmount     Float?
+
+  // IGST
+  igstPercentage Float?
+  igstAmount     Float?
+
+  // UTGST
+  utgstPercentage Float?
+  utgstAmount     Float?
+
+  // ==========================================
+  // AMOUNTS
+  // ==========================================
+
+  // Product amount + transportation
+  taxableAmount Float?
+
+  // Total GST amount
+  gstAmount Float?
+
+  // ==========================================
+  // TRANSPORTATION
+  // ==========================================
+
+  transportationCharges Float?
+
+  // ==========================================
+  // FINAL AMOUNT
+  // ==========================================
+
+  // Taxable amount + GST
+  totalAmount Float?
+
+  // ==========================================
+  // SUPPLIER
+  // ==========================================
+
+  supplierId String?
+  supplier   Supplier? @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+
+  // ==========================================
+  // PROJECT
+  // ==========================================
+
+  projectId String?
+  project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  // ==========================================
+  // STOCK OUT
+  // ==========================================
+
+  stockOutBy String?
+
+  // ==========================================
+  // OTHER DETAILS
+  // ==========================================
+
+  reference String?
+  note      String?
+
+  date      DateTime @default(now())
+  createdAt DateTime @default(now())
+
+  // ==========================================
+  // INDEXES
+  // ==========================================
+
+  @@index([type])
+  @@index([date])
+  @@index([productId])
+}
+
+model Setting {
+  key   String @id
+  value String
+}
